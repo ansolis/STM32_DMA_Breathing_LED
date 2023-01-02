@@ -141,7 +141,7 @@ int main(void)
   // Configure DMA transfer from memory to TIM4 CCR1 register, which
   // controls the PWM duty cycle, on TIM1 update
   HAL_DMA_Start(htim1.hdma[TIM_DMA_ID_UPDATE], (uint32_t)&pwmArr,
-		  (uint32_t)&htim4.Instance->CCR1, ARR_SIZE(pwmArr));
+      (uint32_t)&htim4.Instance->CCR1, ARR_SIZE(pwmArr));
 
   // Enable TIM1 Update DMA request
   __HAL_TIM_ENABLE_DMA(&htim1, TIM_DMA_UPDATE);
@@ -160,7 +160,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	__WFI();
+  __WFI();
   }
   /* USER CODE END 3 */
 }
@@ -325,11 +325,6 @@ static void MX_DMA_Init(void)
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* DMA interrupt init */
-  /* DMA2_Stream5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
-
 }
 
 /**
@@ -356,7 +351,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(OTG_FS_PowerSwitchOn_GPIO_Port, OTG_FS_PowerSwitchOn_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, LD3_Pin|LD5_Pin|LD6_Pin|Audio_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, LD3_Pin|LD5_Pin|LED_BLUE_Pin|Audio_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : CS_I2C_SPI_Pin */
   GPIO_InitStruct.Pin = CS_I2C_SPI_Pin;
@@ -416,8 +411,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(CLK_IN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD3_Pin LD5_Pin LD6_Pin Audio_RST_Pin */
-  GPIO_InitStruct.Pin = LD3_Pin|LD5_Pin|LD6_Pin|Audio_RST_Pin;
+  /*Configure GPIO pins : LD3_Pin LD5_Pin LED_BLUE_Pin Audio_RST_Pin */
+  GPIO_InitStruct.Pin = LD3_Pin|LD5_Pin|LED_BLUE_Pin|Audio_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
