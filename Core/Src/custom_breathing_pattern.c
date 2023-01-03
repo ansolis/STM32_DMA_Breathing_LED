@@ -20,7 +20,7 @@
 #define PATTERN_MAX_STEP_COUNT  100
 
 #define MAX_CLOCK_COUNT         0xFFFF
-#define MAX_PRESCALER           0xFF
+#define MAX_PRESCALER           0xFFFF
 
 #define SEC_TO_MS(s)            ((s) / 1000)  // Convert seconds to milliseconds
 
@@ -56,12 +56,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 static bool setPeriod(uint32_t patternPeriodMs, uint32_t stepCount) {
   uint32_t stepDurationMs = patternPeriodMs / stepCount;
-  //uint32_t maxPeriodTicks = 0;
-  //uint32_t maxPeriodMs = 0;
   uint32_t prescaler = 1;
   uint32_t temp_period_ms;
-  //uint32_t max_timer_period_ms;
   uint32_t timer_period_ticks;
+  //uint32_t temp_pwm_period;
 
   // sys_clock_hz / prescaler = timer_clock_hz
   // period_ticks / timer_clock_hz = period_sec = period_ms / 1000
@@ -70,38 +68,42 @@ static bool setPeriod(uint32_t patternPeriodMs, uint32_t stepCount) {
   //   = 1000 * period_ticks * prescaler / sys_clock_hz
   // period_ms = 1000 * period_ticks * prescaler / sys_clock_hz
 
-  temp_period_ms = SEC_TO_MS(MAX_CLOCK_COUNT * prescaler) / gSystemCoreClock;
+  temp_period_ms = (uint64_t)1000 * ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock;
 
   while (temp_period_ms < stepDurationMs) {
     prescaler *= 2;
     if (prescaler > MAX_PRESCALER) {
       return false;
     }
-    temp_period_ms = (uint64_t)((uint64_t)SEC_TO_MS((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock);
+    temp_period_ms = ((uint64_t)1000 * ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock);
   }
 
-  timer_period_ticks = (((uint64_t)stepDurationMs * (uint64_t)gSystemCoreClock) / (uint64_t)prescaler) / (uint64_t)1000;
+  timer_period_ticks = ((uint64_t)stepDurationMs * (uint64_t)gSystemCoreClock) /
+      ((uint64_t)1000 * (uint64_t)prescaler);
 
   __HAL_TIM_SET_AUTORELOAD(&htim1, timer_period_ticks);
   __HAL_TIM_SET_PRESCALER(&htim1, prescaler);
 
 
   // Update PWM parameters
-  prescaler = 1;
-  temp_period_ms = SEC_TO_MS(MAX_CLOCK_COUNT * prescaler) / gSystemCoreClock;
+//  prescaler = 1;
+//  temp_pwm_period = ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock;
+//
+//  while (temp_pwm_period < PATTERN_MAX_BRIGHTNESS) {
+//    prescaler *= 2;
+//    if (prescaler > MAX_PRESCALER) {
+//      return false;
+//    }
+//    temp_pwm_period = ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock);
+//  }
+//
+//  temp_pwm_period = ((uint64_t)PATTERN_MAX_BRIGHTNESS * (uint64_t)gSystemCoreClock) /
+//        (uint64_t)prescaler;
 
-  while (temp_period_ms < stepDurationMs) {
-    prescaler *= 2;
-    if (prescaler > MAX_PRESCALER) {
-      return false;
-    }
-    temp_period_ms = (uint64_t)((uint64_t)SEC_TO_MS((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock);
-  }
-
-  timer_period_ticks = (((uint64_t)stepDurationMs * (uint64_t)gSystemCoreClock) / (uint64_t)prescaler) / (uint64_t)1000;
-
-  __HAL_TIM_SET_AUTORELOAD(&htim4, timer_period_ticks);
-  __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
+  // As long as the frequency is not too high, we should be ok:
+  // 100MHz system clock => 1MHz timer clock => 1us PWM period
+  __HAL_TIM_SET_AUTORELOAD(&htim4, PATTERN_MAX_BRIGHTNESS);
+  __HAL_TIM_SET_PRESCALER(&htim4, 100);
 
   return true;
 }
