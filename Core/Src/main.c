@@ -160,7 +160,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  __WFI();
+
+    // The MCU will wake up when the timebase timer interrupt is fired
+    // every millisecond, so this should put it right back to sleep
+    __WFI();
+
+//    // Check if the code is running
+//    static int counter = 1;
+//    if (counter % 1000 == 0) {
+//      HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+//    }
+//    counter++;
   }
   /* USER CODE END 3 */
 }
@@ -351,7 +361,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(OTG_FS_PowerSwitchOn_GPIO_Port, OTG_FS_PowerSwitchOn_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, LD3_Pin|LD5_Pin|LED_BLUE_Pin|Audio_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, LED_ORANGE_Pin|LED_RED_Pin|LED_BLUE_Pin|Audio_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : CS_I2C_SPI_Pin */
   GPIO_InitStruct.Pin = CS_I2C_SPI_Pin;
@@ -411,8 +421,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(CLK_IN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD3_Pin LD5_Pin LED_BLUE_Pin Audio_RST_Pin */
-  GPIO_InitStruct.Pin = LD3_Pin|LD5_Pin|LED_BLUE_Pin|Audio_RST_Pin;
+  /*Configure GPIO pins : LED_ORANGE_Pin LED_RED_Pin LED_BLUE_Pin Audio_RST_Pin */
+  GPIO_InitStruct.Pin = LED_ORANGE_Pin|LED_RED_Pin|LED_BLUE_Pin|Audio_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
