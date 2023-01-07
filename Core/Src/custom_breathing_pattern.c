@@ -14,7 +14,7 @@
 #include <math.h>
 
 
-#define PATTERN_PERIOD_MS       4000
+#define PATTERN_PERIOD_MS       3000
 #define PATTERN_MAX_BRIGHTNESS  1000
 #define PATTERN_STEP_COUNT      100
 #define PATTERN_MAX_STEP_COUNT  100
@@ -55,37 +55,61 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 static bool setPeriod(uint32_t patternPeriodMs, uint32_t stepCount) {
-  uint32_t stepDurationMs = patternPeriodMs / stepCount;
-  uint32_t prescaler = 1;
-  uint32_t temp_period_ms;
-  uint32_t timer_period_ticks;
-  //uint32_t temp_pwm_period;
+  uint32_t timer_period = 65536.0f;
 
-  // sys_clock_hz / prescaler = timer_clock_hz
-  // period_ticks / timer_clock_hz = period_sec = period_ms / 1000
-  // period_ms = 1000 * period_ticks / timer_clock_hz =
-  //   = 1000 * period_ticks / (sys_clock_hz / prescaler) =
-  //   = 1000 * period_ticks * prescaler / sys_clock_hz
-  // period_ms = 1000 * period_ticks * prescaler / sys_clock_hz
+  // prescaler * timer_period = step_period_sec * clock_frequency
+  // where:
+  //  - prescaler is the ratio of system clock frequency to timer counter frequency;
+  //  - timer_period is the number of timer ticks before the timer rolls over to 0
+  //    and issues the update event triggering a DMA transfer;
+  //  - step_period_sec is the duration of one pattern step in seconds;
+  //  - clock_frequency is the frequency of the system clock in Hz.
+  //
+  // Both prescaler and timer_period are limited to 65536 and cannot be less than 1.
+  // This means if the right side of equation is less than 1 or greater than
+  // 65536^2 (65536 squared), then the parameters on the other side of the
+  // equation need to be adjusted. The system clock frequency is configured in
+  // the CubeMx code generator tool, Clock Configuration tab.  The step_period_sec
+  // parameter can be adjusted depending on how many steps are chosen and how much
+  // memory is available for extra steps and what the minimum number of steps is
+  // required for smooth brightness transitions in a pattern. For example, if
+  // the value on the right side of the equation exceeds 65536^2, either the
+  // clock_frequency or the step_period_sec can be lowered.  step_period_sec can
+  // be lowered by either choosing more steps in the pattern of the same duration
+  // or by making the duration of the pattern shorter.
 
-  temp_period_ms = (uint64_t)1000 * ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock;
+  float pattern_period_sec = (float)patternPeriodMs / 1000.0f;
 
-  while (temp_period_ms < stepDurationMs) {
-    prescaler *= 2;
-    if (prescaler > MAX_PRESCALER) {
-      return false;
-    }
-    temp_period_ms = ((uint64_t)1000 * ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock);
+  float step_period_sec = pattern_period_sec / (float)stepCount;
+
+  // right-hand side of the equation:
+  float temp = step_period_sec * (float)gSystemCoreClock;
+
+  // Compute the prescaler assuming maximum timer period value
+  timer_period = 65536;
+  uint64_t prescaler = ((uint64_t)temp / timer_period) + 1;
+
+  if (prescaler > 65536) {
+      prescaler = 65536;
   }
 
-  timer_period_ticks = ((uint64_t)stepDurationMs * (uint64_t)gSystemCoreClock) /
-      ((uint64_t)1000 * (uint64_t)prescaler);
+  timer_period = (uint32_t)((step_period_sec * (float)gSystemCoreClock) / (float)prescaler);
 
-  __HAL_TIM_SET_AUTORELOAD(&htim1, timer_period_ticks);
-  __HAL_TIM_SET_PRESCALER(&htim1, prescaler);
+
+  if (timer_period > 65536) {
+    timer_period = 65536;
+  }
+
+  if (timer_period == 0){
+    timer_period = 1;
+  }
+
+  __HAL_TIM_SET_AUTORELOAD(&htim1, timer_period - 1);
+  __HAL_TIM_SET_PRESCALER(&htim1, prescaler - 1);
 
 
   // Update PWM parameters
+
 //  prescaler = 1;
 //  temp_pwm_period = ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock;
 //
