@@ -2,8 +2,8 @@
 
 ## Description
 
-Project using DMA on an STM32 MCU to change PWM duty cycle to control an LED
-breathing pattern without using CPU
+Project using DMA on an STM32 MCU on a STM32F4DISCOVERY board (STM32F407VG MCU)
+to change PWM duty cycle to control an LED breathing pattern without using CPU.
 
 ## Overview
 
