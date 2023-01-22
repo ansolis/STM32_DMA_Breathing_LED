@@ -3,7 +3,7 @@
 ## Description
 
 Project using DMA on an STM32 MCU on a STM32F4DISCOVERY board (STM32F407VG MCU)
-to change PWM duty cycle to control an LED breathing pattern without using CPU.
+to change PWM duty cycle to create LED "breathing" pattern without using CPU.
 
 ## Overview
 
@@ -19,6 +19,12 @@ The values stored in the memory array describe the PWM duty cycle values for
 the entire LED "breathing" pattern period.  The dimming of the LED depends on
 the PWM duty cycle, where the higher duty cycle values result in higher LED
 brightness and lower duty cycle values result in dimmer LED brightness.
+
+Another example of run-time breathing pattern generation and control is \
+given in Core\Src\custom_breathing_pattern.c file, which generates a sine \
+wave pattern (in terms of LED brightness amplitude).  The pattern is \
+generated at run time and the timers and DMA settings are also updated \
+at tun time when the User button is pressed.
 
 ## PWM Period and Duty Cycle
 PWM period is a period of time it takes for the PWM signal to repeat. \

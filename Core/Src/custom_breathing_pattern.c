@@ -108,30 +108,17 @@ static bool setPeriod(uint32_t patternPeriodMs, uint32_t stepCount) {
   __HAL_TIM_SET_PRESCALER(&htim1, prescaler - 1);
 
 
-  // Update PWM parameters
-
-//  prescaler = 1;
-//  temp_pwm_period = ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock;
-//
-//  while (temp_pwm_period < PATTERN_MAX_BRIGHTNESS) {
-//    prescaler *= 2;
-//    if (prescaler > MAX_PRESCALER) {
-//      return false;
-//    }
-//    temp_pwm_period = ((uint64_t)MAX_CLOCK_COUNT * (uint64_t)prescaler) / (uint64_t)gSystemCoreClock);
-//  }
-//
-//  temp_pwm_period = ((uint64_t)PATTERN_MAX_BRIGHTNESS * (uint64_t)gSystemCoreClock) /
-//        (uint64_t)prescaler;
+  // Update PWM parameters to generate PWM
 
   // As long as the frequency is not too high, we should be ok:
-  // 100MHz system clock => 1MHz timer clock => 1us PWM period
+  // 100MHz system clock => 1MHz timer clock => 1ms PWM period
   __HAL_TIM_SET_AUTORELOAD(&htim4, PATTERN_MAX_BRIGHTNESS);
   __HAL_TIM_SET_PRESCALER(&htim4, 100);
 
   return true;
 }
 
+// Generates a smooth sine wave pattern
 static void setPattern(uint32_t patternStepCount, uint32_t maxBrightness) {
   float phase;  // A value between 0 and 2*PI to get a sine wave
 
